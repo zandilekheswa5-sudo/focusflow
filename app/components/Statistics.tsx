@@ -66,7 +66,8 @@ export default function Statistics({
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+    // 1 col on phone → 2 col on tablet → 5 col on desktop
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
       {cards.map((card) => (
         <div
           key={card.label}

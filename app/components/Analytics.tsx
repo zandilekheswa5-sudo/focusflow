@@ -11,7 +11,6 @@ export default function Analytics({
   highPriorityTasks,
   mediumPriorityTasks,
   lowPriorityTasks,
-  overdueTasks,
 }: AnalyticsProps) {
   const cards = [
     {
@@ -29,7 +28,6 @@ export default function Analytics({
       gradient: 'from-yellow-700/50 to-yellow-900/40',
       border: 'border-yellow-500/30',
       glow: 'hover:shadow-[0_0_25px_rgba(234,179,8,0.35)]',
-      textColor: 'text-white',
     },
     {
       label: 'Low Priority',
@@ -42,28 +40,27 @@ export default function Analytics({
   ]
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+    <div className="mb-6">
+      <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
         📊 Priority Breakdown
       </h2>
-      <div className="grid grid-cols-3 gap-4">
+      {/* 1 col phone → 3 col tablet+ */}
+      <div className="grid grid-cols-3 gap-3">
         {cards.map((card) => (
           <div
             key={card.label}
             className={`
               bg-gradient-to-br ${card.gradient}
               backdrop-blur-xl border ${card.border}
-              rounded-2xl p-5 text-center
+              rounded-2xl p-3 md:p-5 text-center
               shadow-lg transition-all duration-300
               hover:scale-[1.03] hover:-translate-y-1 ${card.glow}
             `}
           >
-            <p className={`text-sm font-medium mb-2 ${card.textColor ?? 'text-white/80'}`}>
+            <p className="text-xs md:text-sm font-medium mb-1 md:mb-2 text-white/80">
               {card.dot} {card.label}
             </p>
-            <h3 className={`text-4xl font-bold ${card.textColor ?? 'text-white'}`}>
-              {card.value}
-            </h3>
+            <h3 className="text-2xl md:text-4xl font-bold text-white">{card.value}</h3>
           </div>
         ))}
       </div>

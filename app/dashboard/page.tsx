@@ -25,12 +25,10 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showConfetti, setShowConfetti] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { width, height } = useWindowSize()
 
-  const [filter, setFilter] = useState<
-    'all' | 'todo' | 'completed' | 'high' | 'medium' | 'low'
-  >('all')
-
+  const [filter, setFilter] = useState<'all' | 'todo' | 'completed' | 'high' | 'medium' | 'low'>('all')
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userName, setUserName] = useState<string>('there')
@@ -41,14 +39,12 @@ export default function DashboardPage() {
       if (user) {
         setUserId(user.id)
         loadTasks(user.id)
-
-        // Pull the name saved at signup (user_metadata.full_name)
         const fullName = user.user_metadata?.full_name as string | undefined
         if (fullName) {
           setUserName(fullName)
         } else if (user.email) {
-          // fallback: use the part of the email before @ if no name was saved
-          setUserName(user.email.split('@')[0])
+          const prefix = user.email.split('@')[0]
+          setUserName(prefix.charAt(0).toUpperCase() + prefix.slice(1))
         }
       }
     }
@@ -61,66 +57,35 @@ export default function DashboardPage() {
       .select('*')
       .eq('user_id', currentUserId)
       .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      setTasks(data as Task[])
-    }
+    if (!error && data) setTasks(data as Task[])
   }
 
   async function addTask() {
-    if (!task.trim()) return
-    if (!userId) return
-
+    if (!task.trim() || !userId) return
     if (editingTaskId) {
-      await supabase
-        .from('tasks')
-        .update({
-          title: task,
-          due_date: dueDate || null,
-          priority,
-          category,
-        })
-        .eq('id', editingTaskId)
-
+      await supabase.from('tasks').update({ title: task, due_date: dueDate || null, priority, category }).eq('id', editingTaskId)
       setEditingTaskId(null)
     } else {
-      await supabase.from('tasks').insert({
-        user_id: userId,
-        title: task,
-        due_date: dueDate || null,
-        priority,
-        category,
-        status: 'todo',
-      })
+      await supabase.from('tasks').insert({ user_id: userId, title: task, due_date: dueDate || null, priority, category, status: 'todo' })
     }
-
     setTask('')
     setDueDate('')
     setPriority('medium')
     setCategory('Learning')
     setShowTaskForm(false)
-
     if (userId) loadTasks(userId)
   }
 
   async function completeTask(id: string) {
-    await supabase
-      .from('tasks')
-      .update({ status: 'completed' })
-      .eq('id', id)
-
+    await supabase.from('tasks').update({ status: 'completed' }).eq('id', id)
     setShowConfetti(true)
     setTimeout(() => setShowConfetti(false), 6000)
-
     if (userId) loadTasks(userId)
   }
 
   async function deleteTask(id: string) {
-    const confirmed = window.confirm('Are you sure you want to delete this task?')
-    if (!confirmed) return
-
+    if (!window.confirm('Delete this task?')) return
     await supabase.from('tasks').delete().eq('id', id)
-
     if (userId) loadTasks(userId)
   }
 
@@ -131,11 +96,7 @@ export default function DashboardPage() {
     setPriority(taskItem.priority)
     setCategory(taskItem.category)
     setShowTaskForm(true)
-
-    taskFormRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-    })
+    setTimeout(() => taskFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
   }
 
   function handleAddTaskClick() {
@@ -145,68 +106,47 @@ export default function DashboardPage() {
     setPriority('medium')
     setCategory('Learning')
     setShowTaskForm(true)
-
-    setTimeout(() => {
-      taskFormRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      })
-    }, 100)
+    setTimeout(() => taskFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
   }
 
   function handleTasksNavClick() {
-    yourTasksRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
+    yourTasksRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((t) => {
-      const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesFilter =
-        filter === 'all' ||
-        t.status === filter ||
-        t.priority === filter
-      return matchesSearch && matchesFilter
-    })
-  }, [tasks, searchTerm, filter])
+  const filteredTasks = useMemo(() => tasks.filter((t) => {
+    const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesFilter = filter === 'all' || t.status === filter || t.priority === filter
+    return matchesSearch && matchesFilter
+  }), [tasks, searchTerm, filter])
 
   const totalTasks = tasks.length
   const completedTasks = tasks.filter((t) => t.status === 'completed').length
   const remainingTasks = totalTasks - completedTasks
   const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100)
-
   const dueThisWeek = tasks.filter((t) => {
     if (!t.due_date) return false
-    const today = new Date()
-    const due = new Date(t.due_date)
-    const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    const diff = (new Date(t.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
     return diff >= 0 && diff <= 7
   }).length
-
   const streak = completedTasks > 0 ? Math.min(completedTasks, 30) : 0
-
   const greeting = (() => {
-    const hour = new Date().getHours()
-    if (hour >= 5 && hour < 12) return '☀️ Good Morning'
-    if (hour >= 12 && hour < 18) return '🌤️ Good Afternoon'
-    if (hour >= 18 && hour < 22) return '🌙 Good Evening'
+    const h = new Date().getHours()
+    if (h >= 5 && h < 12) return '☀️ Good Morning'
+    if (h >= 12 && h < 18) return '🌤️ Good Afternoon'
+    if (h >= 18 && h < 22) return '🌙 Good Evening'
     return '🌙 Working Late'
   })()
 
   return (
-    <>
+    <div className="min-h-screen bg-[#0d0d1a]">
+
+      {/* Confetti */}
       {showConfetti && (
-        <Confetti
-          width={width}
-          height={height}
-          recycle={false}
-          numberOfPieces={500}
-          style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999 }}
-        />
+        <Confetti width={width} height={height} recycle={false} numberOfPieces={500}
+          style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999, pointerEvents: 'none' }} />
       )}
 
+      {/* Sidebar */}
       <Sidebar
         activePage="dashboard"
         streak={streak}
@@ -214,23 +154,29 @@ export default function DashboardPage() {
         totalTasks={totalTasks}
         userName={userName}
         onTasksClick={handleTasksNavClick}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
       />
 
+      {/* Top navbar */}
       <TopNavbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filter={filter}
         setFilter={setFilter}
-        onAddTask={handleAddTaskClick}
-      />
+        onAddTask={() => {
+        console.log("ADD TASK CLICKED")
+        handleAddTaskClick()
+    }}
+    onMenuClick={() => {
+      console.log("MENU CLICKED")
+      setMobileOpen(true)
+   }}
+   />
 
-      <main className="ml-56 pt-16 min-h-screen bg-[#0d0d1a]">
-        <div className="fixed inset-0 ml-56 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-200px] left-[10%] w-[500px] h-[500px] rounded-full bg-purple-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-100px] right-[5%] w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[100px]" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-6 py-8">
+      {/* Main content */}
+      <main className="md:ml-56 pt-14 min-h-screen">
+        <div className="max-w-5xl mx-auto px-4 py-6">
 
           <DashboardHeader
             greeting={greeting}
@@ -248,44 +194,36 @@ export default function DashboardPage() {
             dueThisWeek={dueThisWeek}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <Analytics
               highPriorityTasks={tasks.filter((t) => t.priority === 'high').length}
               mediumPriorityTasks={tasks.filter((t) => t.priority === 'medium').length}
               lowPriorityTasks={tasks.filter((t) => t.priority === 'low').length}
-              overdueTasks={tasks.filter((t) => {
-                if (!t.due_date) return false
-                return new Date(t.due_date) < new Date() && t.status !== 'completed'
-              }).length}
+              overdueTasks={tasks.filter((t) => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length}
             />
-
             <UpcomingDeadlines
               upcomingTasks={tasks
                 .filter((t) => t.status !== 'completed' && t.due_date)
-                .sort(
-                  (a, b) =>
-                    new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime()
-                )
+                .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
                 .slice(0, 5)}
             />
           </div>
 
-          {showTaskForm && (
-            <div ref={taskFormRef}>
-              <TaskForm
-                task={task}
-                setTask={setTask}
-                dueDate={dueDate}
-                setDueDate={setDueDate}
-                priority={priority}
-                setPriority={setPriority}
-                category={category}
-                setCategory={setCategory}
-                editing={editingTaskId !== null}
-                addTask={addTask}
-              />
-            </div>
-          )}
+          {/* Task Form — always rendered, toggled with showTaskForm */}
+          <div ref={taskFormRef} style={{ display: showTaskForm ? 'block' : 'none' }}>
+            <TaskForm
+              task={task}
+              setTask={setTask}
+              dueDate={dueDate}
+              setDueDate={setDueDate}
+              priority={priority}
+              setPriority={setPriority}
+              category={category}
+              setCategory={setCategory}
+              editing={editingTaskId !== null}
+              addTask={addTask}
+            />
+          </div>
 
           <SearchFilter
             searchTerm={searchTerm}
@@ -301,30 +239,22 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-4 pb-10">
             {filteredTasks.length === 0 ? (
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-12 text-center text-gray-400">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center text-gray-400">
                 <p className="text-4xl mb-3">✅</p>
                 <p className="font-medium">No tasks found.</p>
-                <p className="text-sm mt-1 text-gray-500">
-                  Click "+ Add Task" to get started.
-                </p>
+                <p className="text-sm mt-1 text-gray-500">Click "+ Add Task" to get started.</p>
               </div>
             ) : (
               filteredTasks.map((t) => (
-                <TaskCard
-                  key={t.id}
-                  task={t}
-                  completeTask={completeTask}
-                  deleteTask={deleteTask}
-                  editTask={editTask}
-                />
+                <TaskCard key={t.id} task={t} completeTask={completeTask} deleteTask={deleteTask} editTask={editTask} />
               ))
             )}
           </div>
 
         </div>
       </main>
-    </>
+    </div>
   )
 }
