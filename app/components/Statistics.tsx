@@ -6,6 +6,7 @@ type StatisticsProps = {
   remainingTasks: number
   progress: number
   dueThisWeek: number
+  overdueTasks: number
 }
 
 export default function Statistics({
@@ -14,6 +15,7 @@ export default function Statistics({
   remainingTasks,
   progress,
   dueThisWeek,
+  overdueTasks,
 }: StatisticsProps) {
   const cards = [
     {
@@ -42,6 +44,7 @@ export default function Statistics({
       gradient: 'from-orange-700/60 to-orange-900/40',
       border: 'border-orange-500/30',
       glow: 'hover:shadow-[0_0_30px_rgba(249,115,22,0.35)]',
+      showOverdue: true,
     },
     {
       icon: '📈',
@@ -66,7 +69,6 @@ export default function Statistics({
   ]
 
   return (
-    // 1 col on phone → 2 col on tablet → 5 col on desktop
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
       {cards.map((card) => (
         <div
@@ -74,7 +76,7 @@ export default function Statistics({
           className={`
             bg-gradient-to-br ${card.gradient}
             backdrop-blur-xl border ${card.border}
-            rounded-2xl p-5 flex flex-col gap-1
+            rounded-2xl p-4 md:p-5 flex flex-col gap-1
             shadow-lg transition-all duration-300
             hover:scale-[1.03] hover:-translate-y-1 ${card.glow}
           `}
@@ -83,10 +85,20 @@ export default function Statistics({
             <span className="text-lg">{card.icon}</span>
             <span className="font-medium">{card.label}</span>
           </div>
-          <div className="text-4xl font-bold text-white tracking-tight">
+          <div className="text-3xl md:text-4xl font-bold text-white tracking-tight">
             {card.value}
           </div>
           <div className="text-xs text-white/40 mt-1">{card.sub}</div>
+
+          {/* Overdue badge inside Remaining card */}
+          {card.showOverdue && overdueTasks > 0 && (
+            <div className="mt-2 inline-flex items-center gap-1 bg-red-500/20 border border-red-500/40 rounded-full px-2 py-0.5 w-fit">
+              <span className="text-red-400 text-[10px] font-bold">
+                🚨 {overdueTasks} overdue
+              </span>
+            </div>
+          )}
+
           {card.showBar && (
             <div className="w-full h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden">
               <div

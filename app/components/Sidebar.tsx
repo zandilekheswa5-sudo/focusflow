@@ -101,7 +101,7 @@ export default function Sidebar({
         </button>
       ))}
       {comingSoon && (
-        <div className="bg-purple-900/95 border border-purple-500/40 rounded-xl px-4 py-3 mt-2">
+        <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-auto md:w-52 bg-purple-900/95 border border-purple-500/40 rounded-xl px-4 py-3 shadow-2xl z-[60]">
           <p className="text-white text-xs font-semibold">🚧 {comingSoon} — Coming Soon!</p>
           <p className="text-purple-300 text-[11px] mt-0.5">This feature is under development.</p>
         </div>
@@ -171,7 +171,7 @@ export default function Sidebar({
       {/* ── MOBILE DRAWER ── */}
       <div
         className={`
-          md:hidden fixed top-0 left-0 h-screen w-[260px]
+          md:hidden fixed top-0 left-0 h-screen w-72
           bg-[#0d0d1a] border-r border-white/10 z-50
           transition-transform duration-300 ease-in-out
           flex flex-col overflow-y-auto

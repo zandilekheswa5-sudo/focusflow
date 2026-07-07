@@ -100,6 +100,7 @@ export default function DashboardPage() {
   }
 
   function handleAddTaskClick() {
+    console.log('Add task clicked!')
     setEditingTaskId(null)
     setTask('')
     setDueDate('')
@@ -138,8 +139,7 @@ export default function DashboardPage() {
   })()
 
   return (
-    <div className="min-h-screen bg-[#0d0d1a]">
-
+    <>
       {/* Confetti */}
       {showConfetti && (
         <Confetti width={width} height={height} recycle={false} numberOfPieces={500}
@@ -164,18 +164,12 @@ export default function DashboardPage() {
         setSearchTerm={setSearchTerm}
         filter={filter}
         setFilter={setFilter}
-        onAddTask={() => {
-        console.log("ADD TASK CLICKED")
-        handleAddTaskClick()
-    }}
-    onMenuClick={() => {
-      console.log("MENU CLICKED")
-      setMobileOpen(true)
-   }}
-   />
+        onAddTask={handleAddTaskClick}
+        onMenuClick={() => { console.log('Menu clicked!'); setMobileOpen(true) }}
+      />
 
       {/* Main content */}
-      <main className="md:ml-56 pt-14 min-h-screen">
+      <main className="md:ml-56 pt-14 min-h-screen bg-[#0d0d1a]">
         <div className="max-w-5xl mx-auto px-4 py-6">
 
           <DashboardHeader
@@ -192,6 +186,7 @@ export default function DashboardPage() {
             remainingTasks={remainingTasks}
             progress={progress}
             dueThisWeek={dueThisWeek}
+            overdueTasks={tasks.filter((t) => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -255,6 +250,6 @@ export default function DashboardPage() {
 
         </div>
       </main>
-    </div>
+    </>
   )
 }

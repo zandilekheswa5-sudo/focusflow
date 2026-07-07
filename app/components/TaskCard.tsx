@@ -38,7 +38,7 @@ export default function TaskCard({
 }: TaskCardProps) {
   const [showToast, setShowToast] = useState(false)
 
-  const priority = priorityConfig[task.priority as keyof typeof priorityConfig] ?? priorityConfig.medium
+  const priority = priorityConfig[task.priority]
 
   async function handleComplete() {
     setShowToast(true)
@@ -85,13 +85,19 @@ export default function TaskCard({
                 {priority.dot} {priority.label}
               </span>
 
-              {/* Due date */}
-              {task.due_date && (
-                <span className="text-gray-400 flex items-center gap-1">
-                  📅{' '}
-                  {new Date(task.due_date).toLocaleDateString('en-GB')}
-                </span>
-              )}
+              {/* Due date — red if overdue and not completed */}
+              {task.due_date && (() => {
+                const isOverdue =
+                  new Date(task.due_date) < new Date() &&
+                  task.status !== 'completed'
+                return (
+                  <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
+                    📅{' '}
+                    {new Date(task.due_date).toLocaleDateString('en-GB')}
+                    {isOverdue && <span className="text-[10px] bg-red-500/20 border border-red-500/40 rounded-full px-1.5 py-0.5 text-red-400">Overdue</span>}
+                  </span>
+                )
+              })()}
 
               {/* Status */}
               <span
