@@ -35,19 +35,19 @@ https://focusflow-nine-gules.vercel.app/
 
 ### 🖥️ Desktop Dashboard
 
-![Desktop Dashboard](public/screenshots/dashboard-desktop.png)
+![Desktop Dashboard](public/Screenshots/dashboard-desktop.png)
 
 ---
 
 ### 📱 Mobile Dashboard
 
-![Mobile Dashboard](public/screenshots/dashboard-mobile.png)
+![Mobile Dashboard](public/Screenshots/dashboard-mobile.png)
 
 ---
 
 ### ✅ Task Management
 
-![Tasks](public/screenshots/tasks.png)
+![Tasks](public/Screenshots/tasks.png)
 
 ---
 
